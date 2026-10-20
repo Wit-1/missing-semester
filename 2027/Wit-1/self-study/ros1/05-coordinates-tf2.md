@@ -213,6 +213,41 @@ broadcaster_.sendTransform(transform);
 
 因此，转换这帧图像解算出的点时，应使用与图像采集时刻匹配的 TF。`ros::Time(0)` 请求最新可用变换，适合当前示例中的最新位姿观察；对于带采集时间的传感器数据，需要按数据时间查询。
 
+## 按时间查询与常见报错
+
+视觉节点收到图像后，可以根据图像消息携带的坐标系和采集时间，查询对应的变换。下面是接口用法示意，不是完整的可运行节点：
+
+```cpp
+const auto transform = buffer.lookupTransform(
+    "turtle_world",           // 目标坐标系
+    image->header.frame_id,    // 图像所属的相机坐标系
+    image->header.stamp,       // 图像采集时刻
+    ros::Duration(0.2));       // 等待所需 TF 的超时时长
+```
+
+这段代码查询的是：在图像采集时刻，将相机坐标表达成世界坐标所需的变换。实际程序还要建立 TF listener，并处理查询失败的异常。等待参数不会将图像时间改为当前时间。
+
+动态 TF 的 buffer 会保存一段时间的历史变换。查询时间可以落在已有样本之间，由 TF2 在关系允许时插值；不要求每张图像都恰好匹配一条相同时间戳的 TF。
+
+假设某条动态关系在 buffer 中有覆盖 `10.0` 至 `10.5` 秒的有效记录：
+
+| 查询 | 含义 |
+| --- | --- |
+| `ros::Time(0)` | 请求最新可用变换；不是查询零秒的历史记录 |
+| `10.2` 秒 | 位于已有时间范围内，可以在关系连续且数据有效时查询 |
+| `10.8` 秒 | 晚于最新记录，可能报 `extrapolation into the future` |
+| `9.8` 秒 | 早于最早记录，可能报 `extrapolation into the past` |
+
+报错中的“未来”和“过去”是相对于 buffer 的可用时间范围。图像时间比最新 TF 晚时，可能是 TF 传输或计算还没跟上；图像时间比最早 TF 更早时，可能是历史记录已被清理、listener 启动较晚，或两边使用的时间来源不一致。
+
+| 常见异常 | 排查重点 |
+| --- | --- |
+| `LookupException` | 坐标系名称是否正确，listener 是否已经收到这个坐标系 |
+| `ConnectivityException` | 两个坐标系之间是否缺少连接，整条 TF 链是否完整 |
+| `ExtrapolationException` | 请求时间与报错中的最新、最早时间，以及各节点是否使用同一时间轴 |
+
+有完整的 TF 链，也可能缺少所需时刻的动态变换。对于带采集时间的图像，不能只为消除报错就改成 `ros::Time(0)`；机器人移动时，这会改变坐标转换所依据的时刻。静态安装关系则不按动态历史范围处理。
+
 ## 参考资料
 
 ROS 1 Noetic 官方实现参考：
@@ -222,3 +257,5 @@ ROS 1 Noetic 官方实现参考：
 - [动态变换发布接口](https://github.com/ros/geometry2/blob/noetic-devel/tf2_ros/include/tf2_ros/transform_broadcaster.h)
 - [TF 查看工具](https://github.com/ros/geometry/blob/noetic-devel/tf/src/tf_echo.cpp)
 - [图像消息及其采集时间定义](https://github.com/ros/common_msgs/blob/noetic-devel/sensor_msgs/msg/Image.msg)
+- [按指定时间查询变换的接口](https://github.com/ros/geometry2/blob/noetic-devel/tf2_ros/include/tf2_ros/buffer.h)
+- [动态 TF 时间缓存与外推报错](https://github.com/ros/geometry2/blob/noetic-devel/tf2/src/cache.cpp)

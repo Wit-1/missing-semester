@@ -14,6 +14,18 @@ launch 文件用来集中组织节点启动、参数设置和名称重映射。�
 
 本次使用的文件是 [lesson.launch](turtle_control/launch/lesson.launch) 和 [listeners.launch](turtle_control/launch/listeners.launch)。
 
+## roscore、rosrun 和 roslaunch
+
+| 命令 | 作用 | 本次使用方式 |
+| --- | --- | --- |
+| `roscore` | 启动 Master、参数服务器和 rosout 日志节点 | 单独启动 ROS 基础服务 |
+| `rosrun` | 从指定包中找到并执行一个程序 | `rosrun turtlesim turtlesim_node` 打开海龟窗口 |
+| `roslaunch` | 读取启动文件，组织节点、参数和重映射 | `roslaunch turtle_control lesson.launch` 按配置运行海龟与控制节点 |
+
+从尚未启动 ROS 的状态开始，单独用 rosrun 打开海龟，需要先在一个终端运行 `roscore`，保持运行，再在另一个终端运行海龟程序。我们当前的本机配置中，roslaunch 会在需要时自动启动 Master，已有 Master 则复用。
+
+`lesson.launch` 中配置了海龟与运动控制两个节点，因此默认还会执行一轮运动。`rosrun turtlesim turtlesim_node` 运行的是官方海龟程序本身。
+
 ## 实验：通过 launch 传入参数
 
 在容器开发终端运行；若之前的 `lesson.launch` 还在运行，先在它的终端按 Ctrl+C 结束上一轮启动：

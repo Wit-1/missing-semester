@@ -32,6 +32,41 @@
 
 `package.xml` 描述包名和依赖；`CMakeLists.txt` 决定哪些源码参与构建、生成什么程序、连接哪些库。文件放进 `src/` 并不自动意味着它会被编译成新程序。
 
+### 依赖声明与构建规则
+
+本包的 [package.xml](turtle_control/package.xml) 中有：
+
+```xml
+<depend>tf2_ros</depend>
+```
+
+这表示软件包依赖 `tf2_ros`。依赖声明供构建、依赖管理等工具读取，写入这行本身不会下载安装依赖。`<exec_depend>rviz</exec_depend>` 则声明运行相关功能时需要 RViz，本包的 C++ 程序不因此自动链接 RViz。
+
+[CMakeLists.txt](turtle_control/CMakeLists.txt) 中先查找 catkin 和本包使用的组件：
+
+```cmake
+find_package(catkin REQUIRED COMPONENTS geometry_msgs roscpp turtlesim tf2 tf2_ros tf2_geometry_msgs)
+```
+
+其中一个程序的构建配置是：
+
+```cmake
+add_executable(turtle_motion src/turtle_motion.cpp)
+target_include_directories(turtle_motion PRIVATE ${catkin_INCLUDE_DIRS})
+target_link_libraries(turtle_motion ${catkin_LIBRARIES})
+```
+
+| 配置 | 作用 |
+| --- | --- |
+| `find_package` | 查找需要的组件及其构建信息；`REQUIRED` 表示查找失败就报错 |
+| `add_executable` | 指定用哪些源文件构建哪个可执行程序 |
+| `target_include_directories` | 为这个构建目标提供查找头文件的目录 |
+| `target_link_libraries` | 指定这个程序需要链接的库 |
+
+`${catkin_INCLUDE_DIRS}` 和 `${catkin_LIBRARIES}` 是 CMake 变量，分别提供相关头文件目录和库信息。
+
+新增独立 C++ 节点时，通常要完成“写源码 → 配置依赖和构建目标 → 编译 → 运行”。这部分先理解文件和命令的分工；具体配置、编译和报错定位可以由 AI 协助完成，再对照改动与运行结果核对。
+
 ## 做过的实验
 
 第一次创建包时用过以下流程。当前包已经存在，复现现有示例时按[包 README](turtle_control/README.md)编译即可，不再重复创建。

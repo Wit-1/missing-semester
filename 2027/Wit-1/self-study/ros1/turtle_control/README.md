@@ -210,3 +210,4 @@ python3 "$lesson_package/scripts/check_dynamic_tf.py"
 - [RViz 显示与操作](../08-rviz.md)
 - [URDF 与 TF 坐标树](../09-urdf-tf-tree.md)
 - [话题连接、类型与频率排查](../10-communication-debug.md)
+- [YAML 参数配置](../11-yaml-config.md)
