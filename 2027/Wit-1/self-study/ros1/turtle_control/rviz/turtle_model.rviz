@@ -29,7 +29,7 @@ Visualization Manager:
     - Class: rviz/TF
       Name: TF
       Enabled: true
-      Show Names: true
+      Show Names: false
       Show Axes: true
       Show Arrows: false
       Marker Scale: 2
@@ -49,13 +49,13 @@ Visualization Manager:
       Class: rviz/Orbit
       Name: Current View
       Target Frame: turtle_world
-      Distance: 3
+      Distance: 5.061898231506348
       Focal Point:
-        X: 5
-        Y: 5
-        Z: 0.15
-      Pitch: 0.6
-      Yaw: 0.8
+        X: 4.426314353942871
+        Y: 5.312967777252197
+        Z: 0.43190693855285645
+      Pitch: 0.5349999070167542
+      Yaw: 1.0350000858306885
 Window Geometry:
   Width: 1100
-  Height: 760
+  Height: 826
